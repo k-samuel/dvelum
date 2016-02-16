@@ -423,6 +423,7 @@ Ext.define('app.filestorage.UploadWindow', {
             success: function (form, responce) {
                 handle.simpleUpload.getForm().reset();
                 handle.fireEvent('fileUploaded', responce.result.data);
+                handle.fireEvent('filesuploaded');
             },
             failure: app.formFailure
         });
