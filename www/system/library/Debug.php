@@ -10,7 +10,7 @@ class Debug
 	 * Database profiler
 	 * @var Zend_Db_Profiler
 	 */
-	static protected  $_dbProfiler = false;	
+	static protected  $_dbProfilers = array();
 	static protected  $_timers = array();
 	static protected  $_loadedClasses = array();
 	
@@ -28,7 +28,7 @@ class Debug
 
 	static public function setDbProfiler(Zend_Db_Profiler $profiler)
 	{
-		self::$_dbProfiler = $profiler;
+		self::$_dbProfilers[] = $profiler;
 	}
 	
 	static public function setLoadedClasses(array $data)
@@ -49,22 +49,14 @@ class Debug
 			$str .= '<b>Time:</b> ' . number_format((microtime(true) - self::$_scriptStartTime) , 5) . "sec.<br>\n";
 		
 		$str .= '<b>Memory:</b> ' . number_format((memory_get_usage() / (1024 * 1024)) , 3) . "mb<br>\n" . '<b>Memory peak:</b> ' . number_format((memory_get_peak_usage() / (1024 * 1024)) , 3) . "mb<br>\n" . '<b>Includes:</b> ' . sizeof(get_included_files()) . "<br>\n" . '<b>Autoloaded:</b> ' . sizeof(self::$_loadedClasses) . "<br>\n";
-		
 
-		if(self::$_dbProfiler)
-		{
-			$str .= '<b>Queries:</b> ' . self::$_dbProfiler->getTotalNumQueries() . '<br>' . '<b>Queries time:</b> ' . number_format(self::$_dbProfiler->getTotalElapsedSecs() , 5) . 'sec.<br>';
-			if($showQueries)
-			{
-				$profiles = self::$_dbProfiler->getQueryProfiles();
-				if(!empty($profiles))
-					foreach($profiles as $queryProfile)
-						$str .= "\n<br> " . $queryProfile->getQuery();
-			}
-			$str .= "<br>\n";
-		}
+
+		if(!empty(self::$_dbProfilers))
+			$str.= self::getQueryProfiles($showQueries);
+
 		if($showAutoloaded)
 			$str .= "<b>Autoloaded:</b>\n<br> " . implode("\n\t <br>" , self::$_loadedClasses) . '<br>';
+
 		if($showInclided)
 			$str .= "<b>Includes:</b>\n<br> " . implode("\n\t <br>" , get_included_files());
 		
@@ -168,6 +160,38 @@ class Debug
 		
 		self::$_timers[$timer]['stop'] = microtime(true);
 		return self::$_timers[$timer]['stop'] - self::$_timers[$timer]['start'];
+	}
+
+	static protected function getQueryProfiles($showQueries = false)
+	{
+		$str = '';
+
+		$totalCount = 0;
+		$totalTime = 0;
+		$profiles = [];
+
+		foreach(self::$_dbProfilers as $prof)
+		{
+			$totalCount += $prof->getTotalNumQueries();
+			$totalTime += $prof->getTotalElapsedSecs();
+			$prof = $prof->getQueryProfiles();
+			if(!empty($prof)){
+				foreach($prof as $item)
+					$profiles[] = $item;
+			}
+		}
+
+
+		$str .= '<b>Queries:</b> ' . $totalCount. '<br>' . '<b>Queries time:</b> ' . number_format($totalTime, 5) . 'sec.<br>';
+		if($showQueries)
+		{
+			if(!empty($profiles))
+				foreach($profiles as $queryProfile)
+					$str .= '<span style="color:blue;font-size: 11px;">'.number_format($queryProfile->getElapsedSecs(),5).'s. </span><span style="font-size: 11px;color:green;">'. $queryProfile->getQuery()."</span><br>\n";
+		}
+		$str .= "<br>\n";
+
+		return $str;
 	}
 
 }
