@@ -312,7 +312,7 @@ Ext.define('app.filestorage.UploadWindow', {
 
         this.simplePanel = Ext.create('Ext.Panel', {
             title: appLang.SIMPLE_UPLOAD,
-            layout: 'fit',
+            layout: 'border',
             items: [
                 this.simpleUpload
             ]
