@@ -379,4 +379,28 @@ class Resource
 	{
 		$this->_rawJs = '';
 	}
+
+
+	/**
+	 * Create cache file for JS code
+	 * @param string $code
+	 * @param boolean $minify, optional default false
+	 * @return string - file url
+	 */
+	public function cacheJs($code , $minify = false)
+	{
+		$hash = md5($code);
+		$cacheFile = $hash . '.js';
+		$cacheFile = Utils::createCachePath(self::$_jsCachePath , $cacheFile);
+
+		if(!file_exists($cacheFile))
+		{
+			if($minify)
+				$code = Code_Js_Minify::minify($code);
+
+			file_put_contents($cacheFile, $code);
+		}
+
+		return str_replace(self::$_jsCachePath, self::$_wwwRoot . self::$_jsCacheUrl , $cacheFile);
+	}
 }

@@ -143,6 +143,97 @@ class Designer_Factory
 	}
 
 	/**
+	 * Init layout from designer project
+	 * @property string $projectFile - designer project related path
+	 * @property Config_Abstract $designerConfig
+	 * @property array $replaceTemplates, optional
+	 * @property string $moduleId
+	 * @todo cache the code
+	 */
+	static public function compileProject($projectFile , Config_Abstract $designerConfig , $replace, $moduleId)
+	{
+		$projectData = [
+				'applicationClassesNamespace' =>false,
+				'applicationRunNamespace' => false,
+				'includes'=>[
+						'js'=>[],
+						'css'=>[]
+				]
+		];
+
+		if(!file_exists($projectFile))
+			throw new Exception('Invalid project file' . $projectFile);
+
+		/**
+		 * @todo cache slow operation
+		 */
+		$cachedKey = self::getProjectCacheKey($projectFile);
+
+		$project = Designer_Factory::loadProject($designerConfig, $projectFile);
+		$projectCfg = $project->getConfig();
+
+		Ext_Code::setRunNamespace($projectCfg['runnamespace']);
+
+		$includes = self::getProjectIncludes($cachedKey , $project , true , $replace);
+		$projectData['applicationClassesNamespace'] = $projectCfg['namespace'];
+		$projectData['applicationRunNamespace'] = $projectCfg['runnamespace'];
+
+		$names = $project->getRootPanels();
+
+		$initCode = '';
+
+		if(!empty($names))
+		{
+			$items = [];
+
+			$c=0;
+			foreach ($names as $name)
+			{
+				// hide first panel title
+				if($c==0)
+				{
+					$panel = $project->getObject($name);
+					if($panel->isValidProperty('title') && !empty($panel->title)){
+						$panel->title = '';
+					}
+					$c++;
+				}
+				$items[] = Ext_Code::appendRunNamespace($name);
+			}
+
+		}
+
+		$initCode.='
+			Ext.onReady(function(){
+				app.application.fireEvent("projectLoaded", "'.$moduleId.'");
+			});
+		';
+
+		if(!empty($includes))
+		{
+			foreach ($includes as $file)
+			{
+				if(File::getExt($file) == '.css')
+				{
+					if(strpos($file , '?') === false){
+						$file = $file .'?'. $cachedKey;
+					}
+					$projectData['includes']['css'][]=$file;
+				}else{
+
+					if(strpos($file , '?') === false){
+						$file = $file .'?'. $cachedKey;
+					}
+					$projectData['includes']['js'][]=$file;
+				}
+			}
+		}
+		$projectData['includes']['js'][] = Resource::getInstance()->cacheJs($initCode , true);
+		return $projectData;
+	}
+
+
+	/**
 	 * Gel list of JS files to include
 	 * (load and render designer project)
 	 * @param string $cacheKey

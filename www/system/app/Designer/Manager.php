@@ -21,54 +21,67 @@
  */
 class Designer_Manager
 {
-  /**
-   * Application configuration
-   * @var Config_Abstract
-   */
-  protected $_appConfig;
-  /**
-   * Designer configuration
-   * @var Config_Abstract
-   */
-  protected $_designerConfig; 
-  
-  public function __construct(Config_Abstract $appConfig)
-  {
-     $this->_appConfig = $appConfig;
-     $this->_designerConfig = Config::factory(Config::File_Array , $appConfig->get('configs') . 'designer.php');
-  }
-  
-  /**
-   * Render Designer project
-   * @param string $projectFile - file path
-   * @param string $renderTo - optional, default false (html tag id)
-   */
-  public function renderProject($projectFile , $renderTo = false)
-  {
-     $replaces = $this->getReplaceConfig();
-     Designer_Factory::runProject($projectFile , $this->_designerConfig , $replaces , $renderTo);
-  }
-  
-  /**
-   * Get configuration of code templates (for replacing)
-   * @return array
-   */
-  public function getReplaceConfig()
-  {
-     $templates =  $this->_designerConfig->get('templates');
-     return array(
-        array(
-                        'tpl' => $templates['wwwroot'],
-                        'value' => $this->_appConfig->get('wwwroot')
-        ),
-        array(
-                        'tpl' => $templates['adminpath'],
-                        'value' => $this->_appConfig->get('adminPath')
-        ),
-        array(
-                        'tpl' => $templates['urldelimiter'],
-                        'value' => $this->_appConfig->get('urlDelimiter')
-        )
-     );
-  }
+    /**
+     * Application configuration
+     * @var Config_Abstract
+     */
+    protected $_appConfig;
+    /**
+     * Designer configuration
+     * @var Config_Abstract
+     */
+    protected $_designerConfig;
+
+    public function __construct(Config_Abstract $appConfig)
+    {
+        $this->_appConfig = $appConfig;
+        $this->_designerConfig = Config::factory(Config::File_Array , $appConfig->get('configs') . 'designer.php');
+    }
+
+    /**
+     * Render Designer project
+     * @param string $projectFile - file path
+     * @param string $renderTo - optional, default false (html tag id)
+     */
+    public function renderProject($projectFile , $renderTo = false)
+    {
+        $replaces = $this->getReplaceConfig();
+        Designer_Factory::runProject($projectFile , $this->_designerConfig , $replaces , $renderTo);
+    }
+
+    /**
+     * Get configuration of code templates (for replacing)
+     * @return array
+     */
+    public function getReplaceConfig()
+    {
+        $templates =  $this->_designerConfig->get('templates');
+        return array(
+            array(
+                'tpl' => $templates['wwwroot'],
+                'value' => $this->_appConfig->get('wwwroot')
+            ),
+            array(
+                'tpl' => $templates['adminpath'],
+                'value' => $this->_appConfig->get('adminPath')
+            ),
+            array(
+                'tpl' => $templates['urldelimiter'],
+                'value' => $this->_appConfig->get('urlDelimiter')
+            )
+        );
+    }
+
+
+    /**
+     * Compile designer project and return info (script paths, namespaces)
+     * @param $projectFile
+     * @param $moduleId
+     * @return array
+     */
+    public function compileProject($projectFile , $moduleId)
+    {
+        $replaces = $this->getReplaceConfig();
+        return Designer_Factory::compileProject($projectFile , $this->_designerConfig , $replaces,  $moduleId);
+    }
 }

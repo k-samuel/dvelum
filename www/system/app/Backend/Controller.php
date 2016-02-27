@@ -331,4 +331,25 @@ abstract class Backend_Controller extends Controller
       $manager = new Designer_Manager($this->_configMain);
       $manager->renderProject($project , $renderTo);
     }
+
+    /**
+     * Get desktop module info
+     */
+    public function moduleLoaderAction()
+    {
+        $acceptedModules = Config::factory(Config::File_Array,$this->_configMain->get('configs') . 'designer_modules.php');
+        $requestedModule = Request::post('module' , Filter::FILTER_STRING , false);
+
+        if(empty($requestedModule) || !$acceptedModules->offsetExists($requestedModule)){
+            Response::jsonError($this->_lang->get('WRONG_REQUEST'));
+        }
+
+        $moduleInfo = $acceptedModules->get($requestedModule);
+        $projectFile = $moduleInfo['project_file'];
+
+        $manager = new Designer_Manager($this->_configMain);
+        $projectData =  $manager->compileProject($projectFile, $requestedModule);
+
+        Response::jsonSuccess($projectData);
+    }
 }
