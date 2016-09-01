@@ -631,6 +631,29 @@ class Db_Object
             return false;
         }
 
+        if($this->_config->isDistributed() && !$this->getId()){
+            $sharding = Sharding::factory();
+            try{
+                $bucket = $sharding->getBucketForNewObject($this->getName());
+            }catch (Exception $e){
+                $text = 'ORM :: '.$e->getMessage().' '.$this->getName();
+                $this->_errors[] = $text;
+                if(self::$_log)
+                    self::$_log->log($text);
+                return false;
+            }
+            $insertId = $sharding->reserveIndex($this->getName(),$bucket);
+            if($insertId === false){
+                $text = 'ORM :: Cannot reserve index in bucket '.$bucket.' for object '.$this->getName().' ';
+                $this->_errors[] = $text;
+                if(self::$_log)
+                    self::$_log->log($text);
+                return false;
+            }
+            $this->setInsertId($insertId);
+            $this->set($sharding->getBucketField(),$bucket);
+        }
+
         if($this->_config->hasEncrypted()){
             $ivField = $this->_config->getIvField();
             $ivData = $this->get($ivField);

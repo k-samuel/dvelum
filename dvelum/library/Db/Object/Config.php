@@ -321,7 +321,7 @@ class Db_Object_Config
     protected function _getDistributedFields()
     {
         if(!isset(self::$_distributedFields))
-            self::$_distributedFields = Config::factory(Config::File_Array, self::$_configPath.'sharding/fields.php')->__toArray();
+            self::$_distributedFields = Config::factory(Config::File_Array, self::$_configPath.'distributed/fields.php')->__toArray();
 
         return self::$_distributedFields;
     }
@@ -456,6 +456,9 @@ class Db_Object_Config
 
         if($this->hasEncrypted())
             $fields = array_merge($fields , $this->_getEncryptionFields());
+
+        if($this->isDistributed())
+            $fields = array_merge($fields , $this->_getDistributedFields());
 
     	$fields[$primaryKey] = $this->_config['fields'][$primaryKey];
 

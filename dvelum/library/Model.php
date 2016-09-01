@@ -210,11 +210,16 @@ class Model
 
     /**
      * Get Master Db connector
-     * return Zend_Db_Adapter_Abstract
+     * @param integer $shardId, optional default false
+     * @throws Exception
+     * @return Zend_Db_Adapter_Abstract
      */
-    public function getDbConnection()
+    public function getDbConnection($shardId = false)
     {
-        return $this->_db;
+        if(!$shardId){
+            return $this->_db;
+        }
+        return $this->_dbManager->getDbConnection($this->_objectConfig->get('connection'), $shardId);
     }
 
     /**

@@ -6,7 +6,7 @@
   'parent_object' => '',
   'rev_control' => false,
   'save_history' => false,
-  'link_title' => '{name}:{ip}',
+  'link_title' => '{name} dbHost:{dbHost}',
   'disable_keys' => false,
   'readonly' => false,
   'locked' => false,
@@ -30,7 +30,7 @@
       'is_search' => false,
       'allow_html' => false,
     ),
-    'ip' => 
+    'dbHost' => 
     array (
       'type' => '',
       'unique' => '',

@@ -1356,7 +1356,7 @@ class Db_Object_Builder
         $fieldList = Config::storage()->get('objects/distributed/default.php');
 
         if(empty($fieldList))
-            throw new Exception('Cannot get sharding fields: ' . 'objects/distributed/default.php');
+            throw new Exception('Cannot get distributed fields: ' . 'objects/distributed/default.php');
 
         $fieldList = $fieldList->__toArray();
 
@@ -1412,7 +1412,7 @@ class Db_Object_Builder
 
 
             $cfg = Db_Object_Config::getInstance($newObjectName);
-            $cfg->setObjectTitle($this->_objectName.' ID MAP');
+            $cfg->setObjectTitle($this->_objectName.' ID Routes');
 
             if(!$cfg->save())
                 Response::jsonError($lang->get('CANT_WRITE_FS'));

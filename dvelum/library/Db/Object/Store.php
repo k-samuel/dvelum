@@ -78,7 +78,13 @@ class Db_Object_Store
 
     protected function _getDbConnection(Db_Object $object)
     {
-    	return Model::factory($object->getName())->getDbConnection();
+        $shardId = false;
+        if($object->getConfig()->isDistributed()){
+            $sharding = Sharding::factory();
+            $bucketField = $sharding->getBucketField();
+            $shardId = $sharding->getBucketShard($object->get($bucketField));
+        }
+        return Model::factory($object->getName())->getDbConnection($shardId);
     }
     /**
      * Update Db object

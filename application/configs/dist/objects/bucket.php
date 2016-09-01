@@ -33,6 +33,16 @@
       'db_default' => false,
       'db_unsigned' => true,
     ),
+    'accept_new' => 
+    array (
+      'type' => '',
+      'unique' => '',
+      'db_isNull' => false,
+      'required' => false,
+      'validator' => '',
+      'db_type' => 'boolean',
+      'db_default' => 1,
+    ),
   ),
   'indexes' => 
   array (
