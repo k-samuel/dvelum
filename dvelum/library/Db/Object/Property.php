@@ -41,7 +41,7 @@ class Db_Object_Property
             'use_db_prefix',
             'hidden',
             'relations_type',
-            'sharding'
+            'distributed'
     );
     public static $numberLength = array(
             'tinyint' => 3 , 

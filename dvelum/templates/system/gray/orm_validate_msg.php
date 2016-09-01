@@ -129,10 +129,10 @@ if(isset($this->shardObjects) && !empty($this->shardObjects))
     }
 
     if(strlen($deleteStr))
-        echo '<h4>Sharding Objects to be deleted:</h4><ul class="ormUl">' , $deleteStr , '</ul>';
+        echo '<h4>Distributed Objects to be deleted:</h4><ul class="ormUl">' , $deleteStr , '</ul>';
 
     if(strlen($addStr))
-        echo '<h4>Sharding Objects to be added:</h4><ul class="ormUl">' , $addStr , '</ul>';
+        echo '<h4>Distributed Objects to be added:</h4><ul class="ormUl">' , $addStr , '</ul>';
 }
 
 

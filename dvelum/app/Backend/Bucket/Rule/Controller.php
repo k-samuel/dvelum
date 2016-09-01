@@ -6,7 +6,7 @@ class Backend_Bucket_Rule_Controller extends Backend_Controller_Crud{
 
 
     /**
-     * Get list of sharding objects
+     * Get list of distributed objects
      */
     public function objectsListAction()
     {
@@ -17,7 +17,7 @@ class Backend_Bucket_Rule_Controller extends Backend_Controller_Crud{
         foreach ($list as $name)
         {
             $cfg = Db_Object_Config::getInstance($name);
-            if($cfg->hasSharding()){
+            if($cfg->isDistributed()){
                 $data[] = ['id'=>$name,'title'=>$cfg->getTitle().' ('.$name.')'];
             }
         }

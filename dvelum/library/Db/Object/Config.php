@@ -47,7 +47,7 @@ class Db_Object_Config
      * List of system fields used for sharding
      * @var array
      */
-    static protected $_shardingFields;
+    static protected $_distributedFields;
     /**
      * @var Config_Abstract
      */
@@ -287,8 +287,8 @@ class Db_Object_Config
         if($this->hasEncrypted())
             $dataLink['fields'] = array_merge($dataLink['fields'] , $this->_getEncryptionFields());
 
-        if(isset($dataLink['sharding']) && $dataLink['sharding']){
-            $dataLink['fields'] = array_merge($dataLink['fields'] , $this->_getShardingFields());
+        if(isset($dataLink['distributed']) && $dataLink['distributed']){
+            $dataLink['fields'] = array_merge($dataLink['fields'] , $this->_getDistributedFields());
         }
 
         /*
@@ -318,12 +318,12 @@ class Db_Object_Config
         return self::$_cryptFields;
     }
 
-    protected function _getShardingFields()
+    protected function _getDistributedFields()
     {
-        if(!isset(self::$_shardingFields))
-            self::$_shardingFields = Config::factory(Config::File_Array, self::$_configPath.'sharding/fields.php')->__toArray();
+        if(!isset(self::$_distributedFields))
+            self::$_distributedFields = Config::factory(Config::File_Array, self::$_configPath.'sharding/fields.php')->__toArray();
 
-        return self::$_shardingFields;
+        return self::$_distributedFields;
     }
 
     /**
@@ -1116,8 +1116,8 @@ class Db_Object_Config
         if(isset($encFields[$field]))
             return true;
 
-        $shardingFields = $this->_getShardingFields();
-        if(isset($shardingFields[$field]))
+        $distributedFields = $this->_getDistributedFields();
+        if(isset($distributedFields[$field]))
             return true;
 
     	return false;
@@ -1519,9 +1519,9 @@ class Db_Object_Config
         }
     }
 
-    public function hasSharding()
+    public function isDistributed()
     {
-        if($this->_config->offsetExists('sharding') && $this->_config->get('sharding')){
+        if($this->_config->offsetExists('distributed') && $this->_config->get('distributed')){
             return true;
         }else{
             return false;
@@ -1531,10 +1531,10 @@ class Db_Object_Config
 
     public function getIdObject()
     {
-        if($this->hasSharding()){
+        if($this->isDistributed()){
             return $this->getName().'_id';
         }else{
-            throw new Exception('Object has no sharding');
+            throw new Exception('Object has no distribution');
         }
     }
 }

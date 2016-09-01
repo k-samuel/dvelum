@@ -14,7 +14,7 @@
   'use_db_prefix' => true,
   'slave_connection' => 'default',
   'log_detalization' => 'default',
-  'sharding' => false,
+  'distributed' => false,
   'system' => true,
   'fields' => 
   array (

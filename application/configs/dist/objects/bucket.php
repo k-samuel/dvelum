@@ -37,5 +37,5 @@
   'indexes' => 
   array (
   ),
-  'sharding' => false,
+  'distributed' => false,
 ); 

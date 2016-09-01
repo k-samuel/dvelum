@@ -470,7 +470,7 @@ class Backend_Orm_Controller extends Backend_Controller
         $useAcl = Request::post('use_acl', 'boolean', false);
         $acl =  Request::post('acl', 'string', false);
 
-        $sharding = Request::post('sharding','boolean',false);
+        $distributed = Request::post('distributed','boolean',false);
 
         $detalization = Request::post('log_detalization' , 'string' , 'default');
 
@@ -521,7 +521,7 @@ class Backend_Orm_Controller extends Backend_Controller
         $data['slave_connection'] = $slaveConnection;
         $data['connection'] = $connection;
         $data['log_detalization'] = $detalization;
-        $data['sharding'] = $sharding;
+        $data['distributed'] = $distributed;
 
         $name = strtolower($name);
 
@@ -745,7 +745,7 @@ class Backend_Orm_Controller extends Backend_Controller
         }
 
         $objects = $builder->getObjectsUpdatesInfo();
-        $shardObjects = $builder->getShardingObjectsUpdatesInfo();
+        $shardObjects = $builder->getDistributedObjectsUpdatesInfo();
 
         if(empty($colUpd) && empty($indUpd) && empty($keyUpd) && $tableExists && !$engineUpdate && empty($objects) && empty($shardObjects))
             Response::jsonSuccess(array(),array('nothingToDo'=>true));

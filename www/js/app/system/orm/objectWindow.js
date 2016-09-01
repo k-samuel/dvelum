@@ -458,8 +458,8 @@ Ext.define('app.crud.orm.ObjectWindow', {
 				}
 			},{
 				xtype:'checkbox',
-				name:'sharding',
-				fieldLabel:appLang.SHARDING,
+				name:'distributed',
+				fieldLabel:appLang.DISTRIBUTED,
 				value:0,
 				width:200,
 				listeners:{

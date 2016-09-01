@@ -46,7 +46,7 @@ $newsModel = Model::factory(‘News’);<br>
   'qtip_field_type' => 'Тип поля',
   'qtip_object_set_default' => 'Установить значение по умолчанию',
   'qtip_object_use_acl' => 'Использовать список контроля доступа',
-  'qtip_field_sharding' => 'Использовать  шардинг',
+  'qtip_field_distributed' => 'Использовать  шардинг',
   'qtip_object_acl' => 'Даптрер списка контроля доступа',
   'qtip_field_relations_type' => 'Тип связи объектов.<br>
 Полиморфная связь - данные ассоциаций храняться в одной общей таблице объекта Links<br>

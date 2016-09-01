@@ -574,6 +574,6 @@
   'YOU_LOGGED_AS' => 'You logged as',
   'REINSTALL' => 'Reinstall',
   'LAST_VERSION' => 'Last Version',
-  'SHARDING' => 'Sharding',
+  'DISTRIBUTED' => 'Distributed',
   'BUCKET' => 'Bucket',
 );

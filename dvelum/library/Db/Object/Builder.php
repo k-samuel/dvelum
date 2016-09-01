@@ -183,7 +183,7 @@ class Db_Object_Builder
         $engineUpdate = $this->prepareEngineUpdate();
 
         $linksUpdates = $this->getObjectsUpdatesInfo();
-        $shardUpdates = $this->getShardingObjectsUpdatesInfo();
+        $shardUpdates = $this->getDistributedObjectsUpdatesInfo();
 
         $updateKeys = array();
         if(self::$_foreignKeys)
@@ -559,10 +559,10 @@ class Db_Object_Builder
             }
         }
 
-        $shardingUpdate = $this->getShardingObjectsUpdatesInfo();
+        $shardingUpdate = $this->getDistributedObjectsUpdatesInfo();
         if(!empty($shardingUpdate)){
             try{
-                $this->updateSharding($shardingUpdate);
+                $this->updateDistributed($shardingUpdate);
             }catch (Exception $e){
                 $this->_errors[] = $e->getMessage();
                 return false;
@@ -1222,9 +1222,9 @@ class Db_Object_Builder
         return $updates;
     }
 
-    public function getShardingObjectsUpdatesInfo()
+    public function getDistributedObjectsUpdatesInfo()
     {
-        if(!$this->_objectConfig->hasSharding()){
+        if(!$this->_objectConfig->isDistributed()){
             return [];
         }
 
@@ -1340,7 +1340,7 @@ class Db_Object_Builder
         }
     }
 
-    protected function updateSharding($list)
+    protected function updateDistributed($list)
     {
         $lang = Lang::lang();
         $usePrefix = true;
@@ -1353,10 +1353,10 @@ class Db_Object_Builder
         $oConfigPath = Db_Object_Config::getConfigPath();
         $configDir  = Config::storage()->getWrite() . $oConfigPath;
 
-        $fieldList = Config::storage()->get('objects/sharding/default.php');
+        $fieldList = Config::storage()->get('objects/distributed/default.php');
 
         if(empty($fieldList))
-            throw new Exception('Cannot get sharding fields: ' . 'objects/sharding/default.php');
+            throw new Exception('Cannot get sharding fields: ' . 'objects/distributed/default.php');
 
         $fieldList = $fieldList->__toArray();
 
