@@ -42,6 +42,12 @@ class Db_Object_Config
      * @var array
      */
     static protected $_cryptFields;
+
+    /**
+     * List of system fields used for sharding
+     * @var array
+     */
+    static protected $_shardingFields;
     /**
      * @var Config_Abstract
      */
@@ -281,6 +287,10 @@ class Db_Object_Config
         if($this->hasEncrypted())
             $dataLink['fields'] = array_merge($dataLink['fields'] , $this->_getEncryptionFields());
 
+        if(isset($dataLink['sharding']) && $dataLink['sharding']){
+            $dataLink['fields'] = array_merge($dataLink['fields'] , $this->_getShardingFields());
+        }
+
         /*
          * Init ACL adapter
          */
@@ -306,6 +316,14 @@ class Db_Object_Config
             self::$_encConfig = Config::factory(Config::File_Array, self::$_configPath.'enc/config.php')->__toArray();
 
         return self::$_cryptFields;
+    }
+
+    protected function _getShardingFields()
+    {
+        if(!isset(self::$_shardingFields))
+            self::$_shardingFields = Config::factory(Config::File_Array, self::$_configPath.'sharding/fields.php')->__toArray();
+
+        return self::$_shardingFields;
     }
 
     /**
@@ -1098,6 +1116,10 @@ class Db_Object_Config
         if(isset($encFields[$field]))
             return true;
 
+        $shardingFields = $this->_getShardingFields();
+        if(isset($shardingFields[$field]))
+            return true;
+
     	return false;
     }
 
@@ -1494,6 +1516,25 @@ class Db_Object_Config
             return true;
         }else{
             return false;
+        }
+    }
+
+    public function hasSharding()
+    {
+        if($this->_config->offsetExists('sharding') && $this->_config->get('sharding')){
+            return true;
+        }else{
+            return false;
+        }
+
+    }
+
+    public function getIdObject()
+    {
+        if($this->hasSharding()){
+            return $this->getName().'_id';
+        }else{
+            throw new Exception('Object has no sharding');
         }
     }
 }

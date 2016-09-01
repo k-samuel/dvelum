@@ -470,6 +470,8 @@ class Backend_Orm_Controller extends Backend_Controller
         $useAcl = Request::post('use_acl', 'boolean', false);
         $acl =  Request::post('acl', 'string', false);
 
+        $sharding = Request::post('sharding','boolean',false);
+
         $detalization = Request::post('log_detalization' , 'string' , 'default');
 
         if( $detalization!=='extended'){
@@ -519,6 +521,7 @@ class Backend_Orm_Controller extends Backend_Controller
         $data['slave_connection'] = $slaveConnection;
         $data['connection'] = $connection;
         $data['log_detalization'] = $detalization;
+        $data['sharding'] = $sharding;
 
         $name = strtolower($name);
 
@@ -742,8 +745,9 @@ class Backend_Orm_Controller extends Backend_Controller
         }
 
         $objects = $builder->getObjectsUpdatesInfo();
+        $shardObjects = $builder->getShardingObjectsUpdatesInfo();
 
-        if(empty($colUpd) && empty($indUpd) && empty($keyUpd) && $tableExists && !$engineUpdate && empty($objects))
+        if(empty($colUpd) && empty($indUpd) && empty($keyUpd) && $tableExists && !$engineUpdate && empty($objects) && empty($shardObjects))
             Response::jsonSuccess(array(),array('nothingToDo'=>true));
 
         $template = new Template();
@@ -752,6 +756,7 @@ class Backend_Orm_Controller extends Backend_Controller
         $template->columns = $colUpd;
         $template->indexes = $indUpd;
         $template->objects = $objects;
+        $template->shardObjects = $shardObjects;
         $template->keys = $keyUpd;
         $template->tableExists = $tableExists;
         $template->tableName = $obj->getTable();

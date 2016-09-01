@@ -39,6 +39,7 @@ $newsModel = Model::factory(‘News’);
   'qtip_field_type' => 'Field type',
   'qtip_object_set_default' => 'Set default value',
   'qtip_object_use_acl' => 'Use access control list',
+  'qtip_field_sharding' => 'Use sharding',
   'qtip_object_acl' => 'Access Controll List  adapter',
   'qtip_field_relations_type' => 'Type of relations <br>
 Polymorphic relationship -  associations stored in a common ORM object Links <br>

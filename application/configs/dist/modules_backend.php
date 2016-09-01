@@ -199,4 +199,24 @@
             'icon' => 'i/system/icons/user_auth.png',
             'id' => 'User_Auth',
         ),
+    'Bucket_Rule' =>
+        array (
+            'dev' => false,
+            'active' => true,
+            'class' => 'Backend_Bucket_Rule_Controller',
+            'designer' => '/system/bucket_rule.designer.dat',
+            'in_menu' => true,
+            'icon' => 'i/system/icons/default.png',
+            'id' => 'Bucket_Rule',
+        ),
+    'Bucket' =>
+        array (
+            'dev' => false,
+            'active' => true,
+            'class' => 'Backend_Bucket_Controller',
+            'designer' => '/system/bucket.designer.dat',
+            'in_menu' => true,
+            'icon' => 'i/system/icons/default.png',
+            'id' => 'Bucket',
+        ),
 );

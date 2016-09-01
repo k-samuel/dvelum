@@ -394,4 +394,30 @@
                     'config' => 'Configuration',
                 ),
         ),
+    'bucket' =>
+        array (
+            'title' => 'Bucket',
+            'fields' =>
+                array (
+                    'shard' => 'Shard',
+                ),
+        ),
+    'shard' =>
+        array (
+            'title' => 'Shard',
+            'fields' =>
+                array (
+                    'name' => 'Name',
+                    'ip' => 'IP',
+                ),
+        ),
+    'bucket_rule' =>
+        array (
+            'title' => 'New Record  To Bucket',
+            'fields' =>
+                array (
+                    'object' => 'Object',
+                    'bucket' => 'Bucket',
+                ),
+    ),
 ); 

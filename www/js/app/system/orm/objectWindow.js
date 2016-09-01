@@ -457,6 +457,15 @@ Ext.define('app.crud.orm.ObjectWindow', {
 					render:{fn:this.initTooltip,scope:this}
 				}
 			},{
+				xtype:'checkbox',
+				name:'sharding',
+				fieldLabel:appLang.SHARDING,
+				value:0,
+				width:200,
+				listeners:{
+					render:{fn:this.initTooltip,scope:this}
+				}
+			},{
 				xtype:'fieldcontainer',
                 fieldLabel:appLang.HISTORY_LOG,
                 combineErrors: true,

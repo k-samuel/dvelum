@@ -181,11 +181,15 @@ class Db_Object_Builder
         $updateColumns = $this->prepareColumnUpdates();
         $updateIndexes = $this->prepareIndexUpdates();
         $engineUpdate = $this->prepareEngineUpdate();
+
+        $linksUpdates = $this->getObjectsUpdatesInfo();
+        $shardUpdates = $this->getShardingObjectsUpdatesInfo();
+
         $updateKeys = array();
         if(self::$_foreignKeys)
             $updateKeys = $this->prepareKeysUpdate();
 
-        if(! empty($updateColumns) || ! empty($updateIndexes) || ! empty($updateKeys) || ! empty($engineUpdate))
+        if(! empty($updateColumns) || ! empty($updateIndexes) || ! empty($updateKeys) || ! empty($engineUpdate) || !empty($linksUpdates) || !empty($shardUpdates))
             return false;
         else
             return true;
@@ -545,9 +549,20 @@ class Db_Object_Builder
         }
 
         $ralationsUpdate = $this->getObjectsUpdatesInfo();
+
         if(!empty($ralationsUpdate)){
             try{
                 $this->updateRelations($ralationsUpdate);
+            }catch (Exception $e){
+                $this->_errors[] = $e->getMessage();
+                return false;
+            }
+        }
+
+        $shardingUpdate = $this->getShardingObjectsUpdatesInfo();
+        if(!empty($shardingUpdate)){
+            try{
+                $this->updateSharding($shardingUpdate);
             }catch (Exception $e){
                 $this->_errors[] = $e->getMessage();
                 return false;
@@ -1207,6 +1222,22 @@ class Db_Object_Builder
         return $updates;
     }
 
+    public function getShardingObjectsUpdatesInfo()
+    {
+        if(!$this->_objectConfig->hasSharding()){
+            return [];
+        }
+
+        $updates = [];
+
+        $idObject = $this->_objectConfig->getIdObject();
+        if(!Db_Object_Config::configExists($idObject)){
+            $updates[] = ['name' => $idObject, 'action'=>'add'];
+        }
+
+        return $updates;
+    }
+
     /**
      * Create Db_Object`s for relations
      * @throw Exception
@@ -1297,6 +1328,91 @@ class Db_Object_Builder
 
             $cfg = Db_Object_Config::getInstance($newObjectName);
             $cfg->setObjectTitle($lang->get('RELATIONSHIP_MANY_TO_MANY').' '.$this->_objectName.' & '.$linkedObject);
+
+            if(!$cfg->save())
+                Response::jsonError($lang->get('CANT_WRITE_FS'));
+
+            /*
+             * Build database
+            */
+            $builder = new Db_Object_Builder($newObjectName);
+            $builder->build();
+        }
+    }
+
+    protected function updateSharding($list)
+    {
+        $lang = Lang::lang();
+        $usePrefix = true;
+        $connection = $this->_objectConfig->get('connection');
+
+        $objectModel = Model::factory($this->_objectName);
+        $db = $objectModel->getDbConnection();
+        $tablePrefix = $objectModel->getDbPrefix();
+
+        $oConfigPath = Db_Object_Config::getConfigPath();
+        $configDir  = Config::storage()->getWrite() . $oConfigPath;
+
+        $fieldList = Config::storage()->get('objects/sharding/default.php');
+
+        if(empty($fieldList))
+            throw new Exception('Cannot get sharding fields: ' . 'objects/sharding/default.php');
+
+        $fieldList = $fieldList->__toArray();
+
+        foreach($list as $item)
+        {
+            $newObjectName = $item['name'];
+            $tableName = $newObjectName;
+
+            $objectData = [
+                'parent_object' => $this->_objectName,
+                'connection'=>$connection,
+                'use_db_prefix'=>$usePrefix,
+                'disable_keys' => false,
+                'locked' => false,
+                'readonly' => false,
+                'primary_key' => 'id',
+                'table' => $tableName,
+                'engine' => 'InnoDB',
+                'rev_control' => false,
+                'link_title' => 'id',
+                'save_history' => false,
+                'system' => true,
+                'fields' => $fieldList,
+                'indexes' => [],
+            ];
+
+            $tables = $db->listTables();
+
+            if($usePrefix){
+                $tableName = $tablePrefix . $tableName;
+            }
+
+            if(in_array($tableName, $tables ,true))
+                throw new Exception($lang->get('INVALID_VALUE').' Table Name: '.$tableName .' '.$lang->get('SB_UNIQUE'));
+
+            if(file_exists($configDir . strtolower($newObjectName).'.php'))
+                throw new Exception($lang->get('INVALID_VALUE').' Object Name: '.$newObjectName .' '.$lang->get('SB_UNIQUE'));
+
+            if(!is_dir($configDir) && !@mkdir($configDir, 0655, true)){
+                Response::jsonError($lang->get('CANT_WRITE_FS').' '.$configDir);
+            }
+
+            /*
+             * Write object config
+             */
+            if(!Config_File_Array::create($configDir. $newObjectName . '.php'))
+                Response::jsonError($lang->get('CANT_WRITE_FS') . ' ' . $configDir . $newObjectName . '.php');
+
+            $cfg = Config::storage()->get($oConfigPath. strtolower($newObjectName).'.php' , false , false);
+
+            $cfg->setData($objectData);
+            $cfg->save();
+
+
+            $cfg = Db_Object_Config::getInstance($newObjectName);
+            $cfg->setObjectTitle($this->_objectName.' ID MAP');
 
             if(!$cfg->save())
                 Response::jsonError($lang->get('CANT_WRITE_FS'));

@@ -40,7 +40,8 @@ class Db_Object_Property
             'connection',
             'use_db_prefix',
             'hidden',
-            'relations_type'
+            'relations_type',
+            'sharding'
     );
     public static $numberLength = array(
             'tinyint' => 3 , 
