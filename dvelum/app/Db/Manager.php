@@ -34,7 +34,7 @@ class Db_Manager implements Db_Manager_Interface
             $cfg = $cfg->__toArray();
 
             if($shard){
-                $sharding = Sharding::factory();
+                $sharding = Db_Sharding::factory();
                 $shardInfo = $sharding->getShardInfo($shard);
                 if($shardInfo){
                     $cfg['host'] = $shardInfo['dbHost'];

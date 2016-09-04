@@ -90,7 +90,7 @@ class Model
 
     /**
      * Connection manager
-     * @var Db_Manager_Interface
+     * @var Db_Manager
      */
     protected $_dbManager;
 
@@ -310,9 +310,20 @@ class Model
      */
     final public function getItem($id , $fields = '*')
     {
-        $sql = $this->_dbSlave->select()->from($this->table() , $fields);
-        $sql->where($this->_dbSlave->quoteIdentifier($this->getPrimaryKey()) . ' = '.intval($id));
-        return $this->_dbSlave->fetchRow($sql);
+        if($this->_objectConfig->isDistributed()){
+            $sharding = Db_Sharding::factory();
+            $shard = $sharding->getObjectShard($this->_objectConfig->getName(),$id);
+            if(!$shard){
+                return false;
+            }
+            $db = $this->_dbManager->getDbConnection($this->_objectConfig->get('connection'), $shard);
+        }else{
+            $db = $this->_dbSlave;
+        }
+
+        $sql = $db->select()->from($this->table() , $fields);
+        $sql->where($db->quoteIdentifier($this->getPrimaryKey()) . ' = '.intval($id));
+        return $db->fetchRow($sql);
     }
 
     /**
@@ -405,13 +416,33 @@ class Model
 
         if($data === false)
         {
-            $sql = $this->_dbSlave->select()
-                         ->from($this->table() , $fields)
-                         ->where($this->_dbSlave->quoteIdentifier($this->getPrimaryKey()) .' IN('.self::listIntegers($ids).')');
-            $data = $this->_dbSlave->fetchAll($sql);
+            $data = [];
+            if($this->_objectConfig->isDistributed())
+            {
+                $shardManager = Db_Sharding::factory();
+                $shards = $shardManager->getObjectsShards($this->_objectConfig->getName(), $ids);
+
+                foreach ($shards as $shard=>$items){
+                    $conn = $this->_dbManager->getDbConnection($this->_objectConfig->get('connection'), $shard);
+
+                    $sql = $conn->select()
+                        ->from($this->table() , $fields)
+                        ->where($conn->quoteIdentifier($this->getPrimaryKey()) .' IN('.self::listIntegers($items).')');
+                    $list = $conn->fetchAll($sql);
+                    if(!empty($list)){
+                        $data = array_merge($data,$list);
+                    }
+                }
+
+            }else{
+                $sql = $this->_dbSlave->select()
+                    ->from($this->table() , $fields)
+                    ->where($this->_dbSlave->quoteIdentifier($this->getPrimaryKey()) .' IN('.self::listIntegers($ids).')');
+                $data = $this->_dbSlave->fetchAll($sql);
+            }
 
             if(!$data)
-                $data = array();
+                $data = [];
 
             if($useCache && $this->_cache)
                 $this->_cache->save($data , $cacheKey , $this->_cacheTime);

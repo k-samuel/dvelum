@@ -382,8 +382,32 @@ class Db_Object_Config
     	}
     	else
     	{
-    		return array();
+    		return [];
     	}
+    }
+
+    /**
+     * Get list of distributed indexes
+     * @return array
+     */
+    public function getDistributedIndexesConfig()
+    {
+        if(!$this->isDistributed()) {
+           return [];
+        }
+
+        $list = [];
+
+        if($this->_config->offsetExists('distributed_indexes')){
+            $list = $this->_config->get('distributed_indexes');
+        }
+
+        // Set Required Indexes
+        $list[$this->getPrimaryKey()] = ['field'=>$this->getPrimaryKey(),'is_system'=>true];
+        $bucketField = Db_Sharding::factory()->getBucketField();
+        $list[$bucketField] = ['field'=>$bucketField,'is_system'=>true];
+
+        return $list;
     }
 
     /**
@@ -993,6 +1017,18 @@ class Db_Object_Config
     }
 
     /**
+     * Configure distributed index
+     * @param $index
+     * @param array $config
+     */
+    public function setDistributedIndexConfig($index, array $config)
+    {
+        $indexes = $this->getDistributedIndexesConfig();
+        $indexes[$index] = $config;
+        $this->_config->set('distributed_indexes', $indexes);
+    }
+
+    /**
      * Rename field and rebuild the database table
      * @param string $oldName
      * @param string $newName
@@ -1077,6 +1113,22 @@ class Db_Object_Config
     		return;
     	unset($indexes[$name]);
     	$this->_config->set('indexes' , $indexes);
+    }
+
+    /**
+     * Delete distributed index
+     * @param string $name
+     */
+    public function removeDistributedIndex($name)
+    {
+        $indexes = $this->getDistributedIndexesConfig();
+
+        if(!isset($indexes[$name]) || $indexes[$name]['is_system'])
+            return;
+
+        unset($indexes[$name]);
+
+        $this->_config->set('distributed_indexes' , $indexes);
     }
 
     /**

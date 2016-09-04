@@ -1,5 +1,5 @@
 <?php
-class Sharding
+class Db_Sharding
 {
     static protected $instance = false;
     static protected $cache;
@@ -19,7 +19,7 @@ class Sharding
 
     /**
      * Factory method
-     * @return Sharding
+     * @return Db_Sharding
      */
     static public function factory()
     {
@@ -54,6 +54,7 @@ class Sharding
     {
         return $this->config->get('bucket_field');
     }
+
     /**
      * Get object bucket by id
      * @param $objectName
@@ -72,6 +73,79 @@ class Sharding
 
         return false;
     }
+
+    /**
+     * Get Object Buckets
+     * @param $objectName
+     * @param array $objectIds
+     * @return array   [ [bucket_id=>[itemId1,itemId2]] ]
+     */
+    public function getBuckets($objectName, array $objectIds)
+    {
+        $idModel = Model::factory(Db_Object_Config::getInstance($objectName)->getIdObject());
+        $pk = $idModel->getPrimaryKey();
+        $items = $idModel->getItems($objectIds);
+        $bucketField = $this->config->get('bucket_field');
+
+        if(empty($items))
+            return [];
+
+        $buckets = [];
+        foreach ($items as $info){
+            $bucket = $info[$bucketField];
+            if(!isset($buckets[$bucket])){
+                $buckets[$bucket][] = $info[$pk];
+            }
+        }
+        return $buckets;
+    }
+
+    /**
+     * Get object shard id
+     * @param string $objectName
+     * @param integer $objectId
+     * @return bool|int
+     */
+    public function getObjectShard($objectName,$objectId)
+    {
+        $bucket = $this->getBucket($objectName, $objectId);
+        if(!$bucket){
+            return false;
+        }
+        return $this->getBucketShard($bucket);
+    }
+
+    /**
+     * @param $objectName
+     * @param array $objectId
+     * @return array  [ [shard_id=>[itemId1,itemId2]] ]
+     */
+    public function getObjectsShards($objectName,array $objectId)
+    {
+        $buckets = $this->getBuckets($objectName, $objectId);
+
+        if(empty($buckets))
+            return [];
+
+        $shards = [];
+        $bucketShard = [];
+        foreach ($buckets as $bucket=>$items)
+        {
+            if(!isset($bucketShard[$bucket])){
+                $sh = $this->getBucketShard($bucket);
+                if(!$sh){
+                    continue;
+                }
+                $bucketShard[$bucket] = $sh;
+            }
+            if(!isset($shards[$bucketShard[$bucket]])){
+                $shards[$bucketShard[$bucket]] = [];
+            }
+            $shards[$bucketShard[$bucket]] = array_merge($shards[$bucketShard[$bucket]],$items);
+        }
+        return $shards;
+    }
+
 
     /**
      * Get bucket for new object (Resharding by switching shard for new records)

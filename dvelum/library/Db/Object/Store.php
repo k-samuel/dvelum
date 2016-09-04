@@ -80,7 +80,7 @@ class Db_Object_Store
     {
         $shardId = false;
         if($object->getConfig()->isDistributed()){
-            $sharding = Sharding::factory();
+            $sharding = Db_Sharding::factory();
             $bucketField = $sharding->getBucketField();
             $shardId = $sharding->getBucketShard($object->get($bucketField));
         }

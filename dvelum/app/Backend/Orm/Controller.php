@@ -290,6 +290,101 @@ class Backend_Orm_Controller extends Backend_Controller
     }
 
     /**
+     * Get distributed indexes
+     */
+    public function distIndexesAction()
+    {
+        $object = Request::post('object', 'string', false);
+
+        if(!$object)
+            Response::jsonError($this->_lang->INVALID_VALUE);
+
+        try{
+            $objectConfig = Db_Object_Config::getInstance($object);
+        }catch (Exception $e){
+            Response::jsonError($this->_lang->INVALID_VALUE);
+        }
+
+        $list = [];
+        $indexCfg = $objectConfig->getDistributedIndexesConfig();
+
+        if(!empty($indexCfg)){
+            foreach ($indexCfg as $v){
+               $list[] = ['field'=>$v['field'],'is_system'=>$v['is_system']];
+            }
+        }
+        Response::jsonArray(array_values($list));
+    }
+
+    /**
+     * Get list of fields that can be added as distributed index
+     */
+    public function acceptedDistributedFieldsAction()
+    {
+        $object = Request::post('object', 'string', false);
+        if(!$object)
+            Response::jsonError($this->_lang->INVALID_VALUE);
+
+        try{
+            $objectConfig = Db_Object_Config::getInstance($object);
+        }catch (Exception $e){
+            Response::jsonError($this->_lang->INVALID_VALUE);
+        }
+
+        $indexCfg = $objectConfig->getDistributedIndexesConfig();
+        $fields = $objectConfig->getFieldsConfig();
+
+        $data = [];
+        foreach ($fields as $name=>$config){
+            if(isset($indexCfg[$name])){
+                continue;
+            }
+            $dbType = $config['db_type'];
+            if(
+                in_array($dbType, Db_Object_Builder::$charTypes, true)
+                ||
+                in_array($dbType, Db_Object_Builder::$numTypes, true)
+                ||
+                in_array($dbType, Db_Object_Builder::$dateTypes, true)
+            ){
+                $data[] = ['name'=>$name];
+            }
+        }
+        Response::jsonSuccess($data);
+    }
+
+    /**
+     * Add distributed index
+     */
+    public function addDistributedIndexAction()
+    {
+        $object = Request::post('object', 'string', false);
+        $field = Request::post('field','string',false);
+
+        if(!$object)
+            Response::jsonError($this->_lang->INVALID_VALUE);
+
+        try{
+            $objectConfig = Db_Object_Config::getInstance($object);
+        }catch (Exception $e){
+            Response::jsonError($this->_lang->INVALID_VALUE);
+        }
+
+        if(!$objectConfig->fieldExists($field)){
+            Response::jsonError($this->_lang->INVALID_VALUE);
+        }
+
+        $objectConfig->setDistributedIndexConfig($field, ['field'=>$field,'is_system'=>false]);
+
+        $manager = new Backend_Orm_Manager();
+
+        if($objectConfig->save() && $manager->syncDistributedIndex($object))
+            Response::jsonSuccess();
+        else
+            Response::jsonError($this->_lang->CANT_WRITE_FS);
+    }
+
+    /**
      * Load index config action
      */
     public function loadIndexAction()
@@ -440,6 +535,34 @@ class Backend_Orm_Controller extends Backend_Controller
         $objectCfg->removeIndex($index);
 
         if($objectCfg->save())
+            Response::jsonSuccess();
+        else
+            Response::jsonError($this->_lang->CANT_WRITE_FS);
+    }
+
+    /**
+     * Delete distributed index
+     */
+    public function deleteDistributedIndexAction()
+    {
+        $this->_checkCanDelete();
+
+        $object =  Request::post('object', 'string', false);
+        $index =   Request::post('name', 'string', false);
+
+        if(!$object || !$index)
+            Response::jsonError($this->_lang->WRONG_REQUEST);
+
+        try{
+            $objectCfg = Db_Object_Config::getInstance($object);
+        }catch (Exception $e){
+            Response::jsonError($this->_lang->WRONG_REQUEST .' code 2');
+        }
+
+        $objectCfg->removeDistributedIndex($index);
+        $manager = new Backend_Orm_Manager();
+
+        if($objectCfg->save() && $manager->syncDistributedIndex($object))
             Response::jsonSuccess();
         else
             Response::jsonError($this->_lang->CANT_WRITE_FS);

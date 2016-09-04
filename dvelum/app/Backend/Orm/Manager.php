@@ -322,4 +322,39 @@ class Backend_Orm_Manager
 		}
 		return 0;
 	}
+
+    /**
+     * Sync Distributed index structure
+     * add fields into ObjectId
+     * @param string $objectName
+     * @return bool
+     */
+	public function syncDistributedIndex($objectName)
+    {
+        $oConfig = Db_Object_Config::getInstance($objectName);
+        $distIndexes = $oConfig->getDistributedIndexesConfig();
+
+        $idObject = $oConfig->getIdObject();
+        $idObjectConfig = Db_Object_Config::getInstance($idObject);
+
+        foreach ($distIndexes as $name=>$info)
+        {
+            if($name == $idObjectConfig->getPrimaryKey()){
+                continue;
+            }
+
+            $cfg = $oConfig->getFieldConfig($name);
+            $cfg['system'] = false;
+            $cfg['db_isNull'] = true;
+
+
+            $idObjectConfig->setFieldConfig($name,$cfg);
+            $idObjectConfig->setIndexConfig($name,[
+                    'columns' => [$name],
+                    'fulltext' => false,
+                    'unique' => false,
+            ]);
+        }
+        return $idObjectConfig->save();
+    }
 }

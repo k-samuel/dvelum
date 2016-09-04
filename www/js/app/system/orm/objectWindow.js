@@ -90,6 +90,33 @@ Ext.define('app.crud.orm.ObjectWindow', {
 			}]
 		});
 
+		this.distributedIndexStore = Ext.create('Ext.data.Store', {
+			model: 'app.crud.orm.ditributedIndex',
+			remoteSort:false,
+			proxy: {
+				type: 'ajax',
+				url:app.crud.orm.Actions.listObjDistIndexes,
+				reader:{
+					type: 'json',
+					rootProperty: 'data',
+					idProperty: 'field'
+				},
+				extraParams:{'object':this.objectName},
+				actionMethods : {
+					create : 'POST',
+					read   : 'POST',
+					update : 'POST',
+					destroy: 'POST'
+				},
+				simpleSortMode: true
+			},
+			autoLoad: false,
+			sorters: [{
+				property : 'field',
+				direction: 'ASC'
+			}]
+		});
+
 		this.searchField = Ext.create('SearchPanel',{
 			store:this.dataStore,
 			fieldNames:['name' , 'title'],
@@ -338,6 +365,107 @@ Ext.define('app.crud.orm.ObjectWindow', {
 			]
 		});
 
+        this.acceptedDistributedFields = Ext.create('Ext.data.Store', {
+            fields:[
+                {name:'field', type:'string'}
+            ],
+            proxy: {
+                type: 'ajax',
+                url:app.crud.orm.Actions.acceptedDistFields,
+                reader: {
+                    type: 'json',
+                    rootProperty: 'data',
+                    idProperty: 'id'
+                },
+                extraParams:{'object':this.objectName},
+                actionMethods : {
+                    create : 'POST',
+                    read   : 'POST',
+                    update : 'POST',
+                    destroy: 'POST'
+                },
+                simpleSortMode: false
+            },
+            autoLoad: false,
+            sorters: [{
+                property : 'field',
+                direction: 'ASC'
+            }]
+        });
+
+        this.addDistIndexCombo = Ext.create('Ext.form.field.ComboBox',{
+            store:this.acceptedDistributedFields,
+            displayField:'name',
+            valueField:'name',
+            forceSelection:true,
+            queryMode: 'remote',
+            queryCaching:false,
+            triggers:{
+                addDistIndex:{
+                    cls:'dv-add-trigger',
+                    handler:function(){
+                        var value =  me.addDistIndexCombo.getValue();
+
+                        if(!value || !value.length){
+                            return;
+                        }
+                        var store =  me.distributedIndexGrid.getStore();
+                        var index = store.findExact('field', value);
+
+                        if(index==-1){
+                            me.addDistributedIndex(value);
+                        }
+                    },
+                    scope:this
+                }
+            }
+        });
+
+		this.distributedIndexGrid = Ext.create('Ext.grid.Panel',{
+			store:this.distributedIndexStore,
+			frame: false,
+			loadMask:true,
+			columnLines: true,
+			scrollable:true,
+			bodyBorder:false,
+			border:false,
+			title:appLang.DISTRIBUTED_INDEXES,
+            tbar:[
+                appLang.ADD_INDEX + ':',
+                this.addDistIndexCombo
+            ],
+			defaults:{
+				sortable:true
+			},
+			viewConfig:{
+				stripeRows:true,
+				enableTextSelection: true
+			},
+			forceFit:true,
+			columns: [{
+				text: appLang.FIELD,
+				dataIndex: 'field',
+				width:150,
+				flex:1,
+				align:'left'
+			},{
+			    xtype:'actioncolumn',
+                align:'center',
+                width:25,
+                items:[
+                    {
+                        icon:app.wwwRoot+'i/system/delete.png',
+                        handler:function(view, row, col, item, e, record){
+                            me.deleteDistributedIndex(record.get('field'));
+                        },
+                        isDisabled:function(view,row,col,item,record){
+                            return record.get('is_system');
+                        }
+                    }
+                ]
+            }]
+		});
+
 
 		if(app.crud.orm.canEdit){
 			var mainConfButtons =[{
@@ -451,15 +579,6 @@ Ext.define('app.crud.orm.ObjectWindow', {
 				xtype:'checkbox',
 				name:'rev_control',
 				fieldLabel:appLang.VC,
-				value:0,
-				width:200,
-				listeners:{
-					render:{fn:this.initTooltip,scope:this}
-				}
-			},{
-				xtype:'checkbox',
-				name:'distributed',
-				fieldLabel:appLang.DISTRIBUTED,
 				value:0,
 				width:200,
 				listeners:{
@@ -776,6 +895,23 @@ Ext.define('app.crud.orm.ObjectWindow', {
 						render:{fn:this.initTooltip,scope:this}
 					}
 				},{
+                    xtype:'checkbox',
+                    name:'distributed',
+                    fieldLabel:appLang.DISTRIBUTED,
+                    value:0,
+                    width:200,
+                    listeners:{
+                        render:{fn:this.initTooltip,scope:this},
+                        change:function(box, value){
+                            if(value){
+                                this.distributedIndexGrid.enable();
+                            }else{
+                                this.distributedIndexGrid.disable();
+                            }
+                        },
+                        scope:this
+                    }
+                },{
 					xtype:'fieldcontainer',
 					fieldLabel:' ',
 					labelSeparator:'',
@@ -797,15 +933,17 @@ Ext.define('app.crud.orm.ObjectWindow', {
 			this.tabPanel.add(this.dataGrid);
 			this.tabPanel.setActiveTab(1);
 			this.tabPanel.add(this.indexGrid);
+			this.tabPanel.add(this.distributedIndexGrid);
 			this.dataStore.load();
 			this.indexStore.load();
+			this.distributedIndexStore.load();
 		}
 
 		this.items = [this.tabPanel];
 
 		this.callParent(arguments);
 
-
+        this.distributedIndexGrid.disable();
 		var form = this.configForm.getForm();
 		form.findField('primary_key').setReadOnly(true);
 		form.findField('primary_key').setFieldStyle({color:"#808080"});
@@ -1007,6 +1145,36 @@ Ext.define('app.crud.orm.ObjectWindow', {
 			});
 		},this);
 	},
+    /**
+     * Delete distributed index
+     * @param name
+     */
+    deleteDistributedIndex:function (name) {
+        var handle = this;
+        Ext.Msg.confirm(appLang.CONFIRM, appLang.MSG_CONFIRM_DELETE +' "'+name+'"?', function(btn){
+            if(btn != 'yes'){
+                return;
+            }
+            Ext.Ajax.request({
+                url: app.crud.orm.Actions.deleteDistIndex,
+                method: 'post',
+                params:{
+                    'object':this.objectName,
+                    'name':name
+                },
+                success: function(response, request) {
+                    response =  Ext.JSON.decode(response.responseText);
+                    if(response.success){
+                        handle.distributedIndexStore.load();
+                        handle.fireEvent('distributedIndexRemoved');
+                    }else{
+                        Ext.Msg.alert(appLang.MESSAGE, response.msg);
+                    }
+                },
+                failure:app.formFailure
+            });
+        },this);
+    },
 	/**
 	 * Send delete field request
 	 * @param string name
@@ -1174,5 +1342,26 @@ Ext.define('app.crud.orm.ObjectWindow', {
 
 			win.show();
 		},this);
-	}
+	},
+    addDistributedIndex:function(value){
+	    var me = this;
+        Ext.Ajax.request({
+            url: app.crud.orm.Actions.addDistributedIndex,
+            method: 'post',
+            params:{
+                'object':this.objectName,
+                'field':value
+            },
+            success: function(response, request) {
+                response =  Ext.JSON.decode(response.responseText);
+                if(response.success){
+                    me.distributedIndexStore.load();
+                    me.fireEvent('distributedIndexAdded');
+                }else{
+                    Ext.Msg.alert(appLang.MESSAGE, response.msg);
+                }
+            },
+            failure:app.formFailure
+        });
+    }
 });

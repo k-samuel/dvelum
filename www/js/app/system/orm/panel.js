@@ -49,6 +49,14 @@ Ext.define('app.crud.orm.Index', {
 	]
 });
 
+Ext.define('app.crud.orm.ditributedIndex', {
+	extend: 'Ext.data.Model',
+	fields: [
+		{name:'field' ,  type:'string'},
+		{name:'is_system', type:'boolean'}
+	]
+});
+
 Ext.define('app.crud.orm.Main',{
 	extend:'Ext.panel.Panel',
 	dataStore:null,
@@ -63,12 +71,14 @@ Ext.define('app.crud.orm.Main',{
 
         app.crud.orm.Actions = {
             addDictionary:		this.controllerUrl  + 'adddictionary',
+			addDistributedIndex:this.controllerUrl  + 'adddistributedindex',
             listDictionaries:	this.controllerUrl  + 'listdictionaries',
             updateDictionary:	this.controllerUrl  + 'updatedictionary',
             removeDictionary:	this.controllerUrl  + 'removedictionary',
             listObj: 			this.controllerUrl  + 'list',
             listObjFields: 		this.controllerUrl  + 'fields',
             listObjIndexes: 	this.controllerUrl  + 'indexes',
+			listObjDistIndexes: this.controllerUrl  + 'distindexes',
             listBackups: 		this.controllerUrl  + 'listbackups',
             listAcl:			this.controllerUrl  + 'listacl',
             loadObjCfg: 		this.controllerUrl  + 'load',
@@ -82,6 +92,7 @@ Ext.define('app.crud.orm.Main',{
             saveObjField: 		this.controllerUrl  + 'savefield',
             saveObjIndex:	 	this.controllerUrl  + 'saveindex',
             deleteIndex: 		this.controllerUrl  + 'deleteindex',
+			deleteDistIndex: 	this.controllerUrl  + 'deletedistributedindex',
             deleteField:	 	this.controllerUrl  + 'deletefield',
             validateObject: 	this.controllerUrl  + 'validate',
             buildObject:		this.controllerUrl  + 'build',
@@ -95,7 +106,8 @@ Ext.define('app.crud.orm.Main',{
             importUrl:			app.createUrl([this.controllerUrl + 'import','']),
             encryptData:		this.controllerUrl  + 'encryptdata',
             decryptData:		this.controllerUrl  + 'decryptdata',
-            taskStat:			this.controllerUrl  + 'taskstat'
+            taskStat:			this.controllerUrl  + 'taskstat',
+			acceptedDistFields: this.controllerUrl + 'acceptedDistributedFields'
         };
 
 		this.tbar = [];

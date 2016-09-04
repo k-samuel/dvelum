@@ -632,7 +632,7 @@ class Db_Object
         }
 
         if($this->_config->isDistributed() && !$this->getId()){
-            $sharding = Sharding::factory();
+            $sharding = Db_Sharding::factory();
             try{
                 $bucket = $sharding->getBucketForNewObject($this->getName());
             }catch (Exception $e){
