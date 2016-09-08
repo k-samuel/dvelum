@@ -230,6 +230,11 @@ class Db_Object_Config
     {
         $dataLink = & $this->_config->dataLink();
         $pKeyName = $this->getPrimaryKey();
+
+        if(!isset($dataLink['distributed']))
+            $dataLink['distributed'] = false;
+
+
         /*
          * System field init
          */
@@ -239,7 +244,8 @@ class Db_Object_Config
             'db_type' => 'bigint',
             'db_isNull' => false,
             'db_unsigned'=>true,
-            'db_auto_increment'=>true,
+            // distributed fields does not use auto increment index
+            'db_auto_increment'=>!$dataLink['distributed'],
             'unique'=>'PRIMARY',
             'is_search' =>true,
             'lazyLang'=>true
