@@ -124,10 +124,8 @@ class Backend_User_Controller extends Backend_Controller_Crud
                 unset($data[$k]);
             }
 
-            $v['title'] = $v['module'];
-            if(isset($list[$v['module']]) && !empty($list[$v['module']]['title'])){
-                $v['title'] = $list[$v['module']]['title'];
-            }
+            $moduleConfig = $manager->getModuleConfig($k);
+            $v['title'] = $moduleConfig['title'];
             $v['rc'] = $manager->isVcModule($k);
         }
         unset($v);
