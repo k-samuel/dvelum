@@ -30,7 +30,7 @@ Ext.define('app.report.RecordField',{
     controllerUrl:'',
     
     initComponent:function(){
-        
+        this.controllerUrl = app.root;
         this.bodyPadding = 5;
         //this.bodyCls = 'formBody';
         this.border = false;
