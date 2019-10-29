@@ -1,3 +1,5 @@
+Dvelum 2.0 repository: https://github.com/dvelum/dvelum
+
 DVelum
 ======
 
