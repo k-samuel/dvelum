@@ -1,6 +1,7 @@
-Dvelum 2.0 repository: https://github.com/dvelum/dvelum
+[Actual DVelum 2.0 repository](https://github.com/dvelum/dvelum)
+======
 
-DVelum
+DVelum 1.x (deprecated)
 ======
 
 Professional PHP/ExtJS-based web development platform
