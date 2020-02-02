@@ -1,4 +1,4 @@
-[Actual DVelum 2.0 repository](https://github.com/dvelum/dvelum)
+[Actual DVelum 2.0 repository](https://github.com/dvelum/dvelum/tree/2.x)
 ======
 
 DVelum 1.x (deprecated)
